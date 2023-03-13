@@ -9,19 +9,19 @@
 (*   it under the terms of the CeCILL free software license, version 2.   *)
 (**************************************************************************)
 
-Require Import List Arith Omega.
+From Coq Require Import List Arith Lia.
 
 (* Tactics *)
 
-(* First, tell the "auto" tactic to use the "omega" solver. *)
+(* First, tell the "auto" tactic to use the "lia" solver. *)
 
-Hint Extern 8 (_ = _ :> nat) => omega.
-Hint Extern 8 (_ <= _) => omega.
-Hint Extern 8 (_ < _) => omega.
-Hint Extern 8 (_ <> _ :> nat) => omega.
-Hint Extern 8 (~ (_ <= _)) => omega.
-Hint Extern 8 (~ (_ < _)) => omega.
-Hint Extern 12 => exfalso; omega.
+Hint Extern 8 (_ = _ :> nat) => lia.
+Hint Extern 8 (_ <= _) => lia.
+Hint Extern 8 (_ < _) => lia.
+Hint Extern 8 (_ <> _ :> nat) => lia.
+Hint Extern 8 (~ (_ <= _)) => lia.
+Hint Extern 8 (~ (_ < _)) => lia.
+Hint Extern 12 => exfalso; lia.
 
 (* Destructing the <=? and ?= (in)equality tests, useful when proving facts
    about "if ... then ... else" code. *)
@@ -156,11 +156,11 @@ Qed.
 Lemma cterm_4 : forall n t, cterm (S n) t ->
   forall t', cterm 0 t' -> cterm n (tsubst n t' t).
 Proof.
-  induction t; induction t'; induction n; intros; 
+  induction t; induction t'; induction n; intros;
   inversion H; inversion H0; repeat (simpl; intuition);
   inversion H2; repeat (simpl; intuition);
   destruct n0; repeat (break; simpl; intuition);
-  repeat (intuition; simpl); 
+  repeat (intuition; simpl);
   repeat (rewrite (@cterm_2 0 _); apply (@cterm_1 0 _)); repeat auto.
 Qed.
 
@@ -317,7 +317,7 @@ Qed.
 Lemma cformula_3 : forall n A, cformula n A ->
   forall t' j, n <= j -> fsubst j t' A = A.
 Proof.
-  intros; generalize dependent n; 
+  intros; generalize dependent n;
   generalize dependent j; induction A;
   intros; eauto; inversion H; simpl; f_equal;
   try apply cterm_3 with (t:=t) (n:=n);
@@ -332,7 +332,7 @@ Lemma cformula_4 : forall n A, cformula (S n) A ->
 Proof.
   intros; generalize dependent n;
   induction A; intros; eauto; inversion H;
-  simpl; 
+  simpl;
   try apply cterm_4 with (t':=t') in H3;
   try apply cterm_4 with (t':=t') in H4;
   eauto.
@@ -408,13 +408,13 @@ Fixpoint nFforall n :=
   match n with
     | 0 => (fun A => A)
     | S m => (fun A => Fforall (nFforall m A))
-  end. 
+  end.
 
 Notation "~ A" := (Fnot A) : pa_scope.
 
 Lemma Rtrue_i : forall Γ, Γ:-Ftrue.
 Proof.
-  intros; unfold Ftrue; apply Rimpl_i; 
+  intros; unfold Ftrue; apply Rimpl_i;
   constructor; intuition.
 Qed.
 
@@ -494,7 +494,7 @@ Proof.
   (* (forall A, In A axioms -> PeanoAx A) *)
   - intros; repeat (destruct H; try apply pa_ind;
     try apply pa_inj; try apply pa_discr; try constructor; eauto).
-  
+
   (* (axioms:-T) *)
 
   (* hyp is to make the proof terms more readable. This is just implication
@@ -559,8 +559,8 @@ Proof.
   simpl;
   try destruct (nat_compare_spec (length v1) n); auto.
   - rewrite <- (app_nil_l v1); repeat rewrite <- app_assoc.
-    assert (length (nil ++ v1) = length v1); auto; rewrite H0.
-    assert (@length nat nil = 0); auto; rewrite <- H1.
+    assert (length (nil ++ v1) = length v1); auto; rewrite H.
+    assert (@length nat nil = 0); auto; rewrite <- H0.
     rewrite (tinterp_1 t' nil v1 v2); simpl.
     assert (n - length v1 = 0); auto.
     rewrite (app_nth2 v1 (tinterp v2 t' :: v2) 0);
@@ -647,7 +647,7 @@ Qed.
 
 
 (*this lemma is useful for cinterp_1 and soundness_rules*)
-Lemma soundness_misc : forall Γ A m n, In A (clift m Γ n) -> 
+Lemma soundness_misc : forall Γ A m n, In A (clift m Γ n) ->
                                         exists B, A = flift m B n /\ In B Γ.
 Proof.
   intros. induction Γ; simpl in H; try contradiction.
@@ -664,10 +664,10 @@ Qed.
 Lemma cinterp_1 : forall Γ v0 v1 v2,
                     cinterp (v0 ++ v2) Γ ->
                     cinterp (v0 ++ v1 ++ v2) (clift (length v1) Γ (length v0)) .
-                    
+
 Proof.
   intro. induction Γ.
-  - intros. simpl. unfold cinterp. intros. simpl in H0. contradiction.    
+  - intros. simpl. unfold cinterp. intros. simpl in H0. contradiction.
   -  unfold cinterp.  simpl. intros. destruct H0.
      + rewrite <- H0. apply finterp_1. apply H. auto.
      + assert (exists B, A = flift (length v1) B (length v0)/\ In B Γ).
@@ -687,12 +687,12 @@ Qed.
 
 Lemma finterp_misc_1 : forall v t B ,  (forall n, finterp (n::v) B)
                                        -> finterp v (fsubst 0 t B).
-Proof.                                     
+Proof.
   intros.  assert (finterp(nil ++  v) (fsubst 0 t B));
     try apply finterp_2; simpl; auto.
 Qed.
-               
-Lemma finterp_misc_2 :  forall v A, 
+
+Lemma finterp_misc_2 :  forall v A,
   (exists n, (finterp (n :: v) (flift 1 A 0))) ->
   finterp v A.
 Proof.
@@ -706,7 +706,7 @@ Proof.
 Qed.
 
 
-Lemma finterp_misc_3 :  forall n v A, 
+Lemma finterp_misc_3 :  forall n v A,
                           finterp v A ->
                           (finterp (n :: v) (flift 1 A 0)).
 Proof.
@@ -740,8 +740,8 @@ Proof.
   - intros. apply H0. auto.
   - intros. cut False. auto. simpl in IHrule. apply IHrule with v. auto.
   - simpl. split; auto.
-  - simpl in IHrule. apply IHrule. 
-  - simpl in IHrule. apply IHrule. 
+  - simpl in IHrule. apply IHrule.
+  - simpl in IHrule. apply IHrule.
   - simpl. left. auto.
   - simpl. right. auto.
   - intros. simpl in IHrule1. assert (finterp v B \/ finterp v C); auto.
@@ -763,7 +763,7 @@ Proof.
       destruct H4 as [C H4]. destruct H4.
       assert (finterp v C). auto. rewrite H4.
       apply finterp_misc_3. auto.
-Qed.                 
+Qed.
 
 
 (* n-times repeated Tsucc *)
@@ -783,13 +783,13 @@ Lemma nTsucc_eq_n : forall A n v, finterp (n::v) A <->
   finterp v (fsubst 0 (nTsucc n Tzero) A).
 Proof.
   intros; destruct n; split; intro; simpl;
-  try apply finterp_2 with (v1 := nil); 
+  try apply finterp_2 with (v1 := nil);
   try apply finterp_2 with (v1 := nil) in H; auto; simpl.
   rewrite <- (@tinterp_nTsucc n v) in H; auto.
   rewrite (@tinterp_nTsucc (S n) v) in H; simpl; auto.
 Qed.
 
-Lemma destruct_list_end : forall n (v1: list nat), length v1 = S n 
+Lemma destruct_list_end : forall n (v1: list nat), length v1 = S n
   -> exists n0 v0, length v0 = n /\ v1 = v0 ++ n0::nil.
 Proof.
   intros.
@@ -819,14 +819,14 @@ Proof.
     rewrite H1; apply H; rewrite app_length; simpl; auto.
 Qed.
 
-Lemma nTsucc_at_n0 : forall A n n0 v, finterp (n0::v) (nFforall n A) 
+Lemma nTsucc_at_n0 : forall A n n0 v, finterp (n0::v) (nFforall n A)
   <-> finterp v (nFforall n (fsubst n (nTsucc n0 Tzero) A)).
 Proof.
   split; intro;
   try rewrite -> (finterp_nFforall A n (n0::v)) in H;
   try rewrite -> (finterp_nFforall (fsubst n (nTsucc n0 Tzero) A) n v);
   try rewrite -> (finterp_nFforall A n (n0::v));
-  try rewrite -> (finterp_nFforall (fsubst n (nTsucc n0 Tzero) A) n v) in H;  
+  try rewrite -> (finterp_nFforall (fsubst n (nTsucc n0 Tzero) A) n v) in H;
   intros; assert (finterp_subst := (finterp_2 (nTsucc n0 Tzero) A v1 v));
   rewrite H0 in finterp_subst; rewrite tinterp_nTsucc in finterp_subst;
   try (rewrite finterp_subst; now apply H).
@@ -836,9 +836,9 @@ Qed.
 (*
 Lemma tlift_unit: forall t n, tlift 0 t n = t.
 Proof.
-  induction t; intros; 
+  induction t; intros;
   repeat (simpl; auto; break);
-  simpl; try f_equal; 
+  simpl; try f_equal;
   try apply IHt; try apply IHt1; try apply IHt2.
 Qed.
 *)
@@ -895,7 +895,7 @@ Proof.
   intro; intro. repeat (destruct H). intro. apply soundness_rules with x. auto.
   unfold cinterp. intros. apply soundness_axioms. auto.
 Qed.
-    
+
 Theorem coherence : ~Thm Ffalse.
 Proof.
   intro.

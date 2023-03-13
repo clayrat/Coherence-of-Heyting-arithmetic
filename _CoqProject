@@ -1,0 +1,4 @@
+-Q . CHA
+-arg "-w -notation-overridden,-local-declaration,-redundant-canonical-projection,-projection-no-head-constant"
+
+theories/Heyting.v
